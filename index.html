@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f1ede4" />
+    <meta
+      name="description"
+      content="Découpez une photo en bandes verticales et inversez leur ordre."
+    />
+    <title>Photo Décalage</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <div class="brand-mark" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <div>
+          <p class="eyebrow">Création photographique</p>
+          <h1>Photo Décalage</h1>
+        </div>
+      </header>
+
+      <section class="workspace" aria-labelledby="workspace-title">
+        <div class="intro">
+          <div>
+            <p class="step">01 — Choisir</p>
+            <h2 id="workspace-title">Transformez votre photo</h2>
+            <p class="explanation">
+              La photo sera découpée en bandes verticales. La bande située tout
+              à droite passera à gauche, et ainsi de suite.
+            </p>
+          </div>
+
+          <div class="actions">
+            <label class="file-button" for="photo-input">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5v3A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5v-3" />
+              </svg>
+              Choisir ou prendre une photo
+            </label>
+            <input id="photo-input" type="file" accept="image/*" />
+
+            <button id="process-button" type="button" disabled>
+              Traiter la photo
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h14m-5-5 5 5-5 5" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <p id="status" class="status" role="status" aria-live="polite">
+          Aucune photo choisie
+        </p>
+
+        <div class="preview-grid">
+          <article class="preview-card">
+            <div class="preview-heading">
+              <span>Photo d’origine</span>
+              <span id="file-name" class="file-name"></span>
+            </div>
+            <div class="image-stage empty" id="original-stage">
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-13Z" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <path d="m4 17 5-5 3.5 3.5 2-2L20 19" />
+                </svg>
+                <p>Votre photo apparaîtra ici</p>
+              </div>
+              <img id="original-image" alt="Photo d’origine choisie" />
+            </div>
+          </article>
+
+          <article class="preview-card result-card">
+            <div class="preview-heading">
+              <span>Résultat décalé</span>
+              <span class="step-number">02 — Résultat</span>
+            </div>
+            <div class="image-stage empty" id="result-stage">
+              <div class="empty-state">
+                <div class="slice-symbol" aria-hidden="true">
+                  <span></span><span></span><span></span><span></span><span></span>
+                </div>
+                <p>Appuyez sur « Traiter la photo »</p>
+              </div>
+              <canvas id="result-canvas" aria-label="Photo découpée en bandes verticales inversées"></canvas>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
