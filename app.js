@@ -14,6 +14,8 @@ const verticalValue = document.querySelector("#vertical-value");
 const horizontalValue = document.querySelector("#horizontal-value");
 const verticalCard = document.querySelector("#vertical-card");
 const horizontalCard = document.querySelector("#horizontal-card");
+const downloadButton = document.querySelector("#download-button");
+const downloadMeta = document.querySelector("#download-meta");
 
 let sourceUrl = "";
 let imageReady = false;
@@ -34,6 +36,7 @@ photoInput.addEventListener("change", () => {
   sourceUrl = URL.createObjectURL(file);
   imageReady = false;
   hasResult = false;
+  downloadMeta.textContent = "PNG — même définition que l’original";
   updateProcessButton();
 
   originalImage.onload = () => {
@@ -42,6 +45,7 @@ photoInput.addEventListener("change", () => {
     originalStage.classList.add("has-image");
     clearResult();
     fileName.textContent = file.name;
+    downloadMeta.textContent = "PNG — " + originalImage.naturalWidth + " × " + originalImage.naturalHeight + " pixels";
     setStatus("Photo prête — réglez les bandes puis lancez le traitement.", true);
     updateProcessButton();
   };
@@ -120,6 +124,29 @@ processButton.addEventListener("click", () => {
   });
 });
 
+downloadButton.addEventListener("click", () => {
+  if (!hasResult) return;
+
+  resultCanvas.toBlob((blob) => {
+    if (!blob) {
+      setStatus("Impossible de préparer le téléchargement.", false);
+      return;
+    }
+
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const originalName = fileName.textContent || "photo";
+    const baseName = originalName.replace(/\.[^.]+$/, "");
+    link.href = downloadUrl;
+    link.download = baseName + "-decalage.png";
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+    setStatus("Image téléchargée en " + resultCanvas.width + " × " + resultCanvas.height + " pixels.", true);
+  }, "image/png");
+});
+
 function reverseVerticalBands(source, target, width, height, bandCount) {
   const context = target.getContext("2d");
   target.width = width;
@@ -184,6 +211,7 @@ function clearResult() {
 
 function updateProcessButton() {
   processButton.disabled = !imageReady || (!verticalEnabled && !horizontalEnabled);
+  downloadButton.disabled = !hasResult;
   if (!hasResult && processButton.textContent !== "Traitement…") {
     processButton.replaceChildren(document.createTextNode("Traiter la photo"), createArrowIcon());
   }
