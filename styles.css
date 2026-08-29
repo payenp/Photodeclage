@@ -230,6 +230,51 @@ h2 {
 
 .band-slider:disabled { opacity: 0.4; cursor: not-allowed; }
 
+.symmetry-setting {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.symmetry-setting.active {
+  border-color: #5d8e89;
+  background: #f2fbfa;
+  box-shadow: 0 0 0 3px rgba(93, 142, 137, 0.09);
+}
+
+.symmetry-setting > span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.symmetry-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 16px;
+  border: 1px solid var(--ink);
+  border-radius: 7px;
+  color: var(--ink);
+  background: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.symmetry-setting.active .symmetry-button {
+  border-color: #315f5b;
+  color: #fff;
+  background: #477d78;
+}
+
 .file-button,
 #process-button,
 .download-button {
@@ -276,7 +321,8 @@ h2 {
 
 .file-button svg,
 #process-button svg,
-.download-button svg {
+.download-button svg,
+.symmetry-button svg {
   width: 20px;
   fill: none;
   stroke: currentColor;
@@ -499,6 +545,17 @@ h2 {
   pointer-events: none;
 }
 
+.mirror-side {
+  position: absolute;
+  inset: 0 auto 0 0;
+  left: 0;
+  background: rgba(71, 125, 120, 0.18);
+  border-right: 1px solid rgba(255, 255, 255, 0.8);
+  pointer-events: none;
+}
+
+.mirror-side[hidden] { display: none; }
+
 .effect-axis {
   position: absolute;
   z-index: 4;
@@ -630,6 +687,9 @@ h2 {
   .direction-settings {
     padding: 16px 20px;
   }
+
+  .symmetry-setting { align-items: stretch; flex-direction: column; }
+  .symmetry-button { width: 100%; }
 
   .status {
     padding-right: 20px;
