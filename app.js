@@ -22,12 +22,17 @@ const effectSide = document.querySelector("#effect-side");
 const effectAxis = document.querySelector("#effect-axis");
 const selectionHelp = document.querySelector("#selection-help");
 const selectionHandles = document.querySelectorAll(".selection-handle");
+const symmetryButton = document.querySelector("#symmetry-button");
+const symmetrySetting = document.querySelector("#symmetry-setting");
+const symmetryLabel = document.querySelector("#symmetry-label");
+const mirrorSide = document.querySelector("#mirror-side");
 
 let sourceUrl = "";
 let imageReady = false;
 let hasResult = false;
 let verticalEnabled = true;
 let horizontalEnabled = false;
+let symmetryEnabled = false;
 let selection = { x: 0.1, y: 0.1, width: 0.8, height: 0.8 };
 let axisPosition = 0.25;
 let imageBounds = { left: 0, top: 0, width: 0, height: 0 };
@@ -118,6 +123,8 @@ function renderSelection() {
   selectionBox.style.height = selection.height * 100 + "%";
   effectSide.style.left = axisPosition * 100 + "%";
   effectAxis.style.left = axisPosition * 100 + "%";
+  mirrorSide.style.left = Math.max(0, axisPosition * 2 - 1) * 100 + "%";
+  mirrorSide.style.right = (1 - axisPosition) * 100 + "%";
   effectAxis.setAttribute("aria-valuenow", String(Math.round(axisPosition * 100)));
 }
 
@@ -142,6 +149,16 @@ function beginDrag(event, mode) {
     axisPosition,
   };
 }
+
+symmetryButton.addEventListener("click", () => {
+  symmetryEnabled = !symmetryEnabled;
+  symmetryButton.setAttribute("aria-pressed", String(symmetryEnabled));
+  symmetrySetting.classList.toggle("active", symmetryEnabled);
+  symmetryLabel.textContent = symmetryEnabled ? "Symétrie activée" : "Symétrie";
+  mirrorSide.hidden = !symmetryEnabled;
+  renderSelection();
+  settingsChanged();
+});
 
 selectionBox.addEventListener("pointerdown", (event) => beginDrag(event, "move"));
 effectAxis.addEventListener("pointerdown", (event) => beginDrag(event, "axis"));
@@ -271,6 +288,17 @@ processButton.addEventListener("click", () => {
     resultContext.drawImage(originalImage, 0, 0, width, height);
     resultContext.drawImage(processedCanvas, effectLeft, selectionTop, effectWidth, effectHeight);
 
+    if (symmetryEnabled) {
+      resultContext.save();
+      resultContext.beginPath();
+      resultContext.rect(selectionLeft, selectionTop, Math.max(0, effectLeft - selectionLeft), effectHeight);
+      resultContext.clip();
+      resultContext.translate(effectLeft * 2, 0);
+      resultContext.scale(-1, 1);
+      resultContext.drawImage(processedCanvas, effectLeft, selectionTop, effectWidth, effectHeight);
+      resultContext.restore();
+    }
+
     hasResult = true;
     resultStage.classList.remove("empty");
     resultStage.classList.add("has-image");
@@ -282,7 +310,11 @@ processButton.addEventListener("click", () => {
       : verticalEnabled
         ? "verticales"
         : "horizontales";
-    setStatus("Terminé — bandes " + directions + " inversées dans la zone choisie.", true);
+    setStatus(
+      "Terminé — bandes " + directions + " inversées dans la zone choisie" +
+      (symmetryEnabled ? " avec symétrie autour de l’axe vertical." : "."),
+      true,
+    );
     resultStage.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 });
