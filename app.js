@@ -16,12 +16,22 @@ const verticalCard = document.querySelector("#vertical-card");
 const horizontalCard = document.querySelector("#horizontal-card");
 const downloadButton = document.querySelector("#download-button");
 const downloadMeta = document.querySelector("#download-meta");
+const selectionLayer = document.querySelector("#selection-layer");
+const selectionBox = document.querySelector("#selection-box");
+const effectSide = document.querySelector("#effect-side");
+const effectAxis = document.querySelector("#effect-axis");
+const selectionHelp = document.querySelector("#selection-help");
+const selectionHandles = document.querySelectorAll(".selection-handle");
 
 let sourceUrl = "";
 let imageReady = false;
 let hasResult = false;
 let verticalEnabled = true;
 let horizontalEnabled = false;
+let selection = { x: 0.1, y: 0.1, width: 0.8, height: 0.8 };
+let axisPosition = 0.25;
+let imageBounds = { left: 0, top: 0, width: 0, height: 0 };
+let dragState = null;
 
 photoInput.addEventListener("change", () => {
   const [file] = photoInput.files;
@@ -37,6 +47,10 @@ photoInput.addEventListener("change", () => {
   imageReady = false;
   hasResult = false;
   downloadMeta.textContent = "PNG — même définition que l’original";
+  selection = { x: 0.1, y: 0.1, width: 0.8, height: 0.8 };
+  axisPosition = 0.25;
+  selectionLayer.hidden = true;
+  selectionHelp.hidden = true;
   updateProcessButton();
 
   originalImage.onload = () => {
@@ -46,12 +60,17 @@ photoInput.addEventListener("change", () => {
     clearResult();
     fileName.textContent = file.name;
     downloadMeta.textContent = "PNG — " + originalImage.naturalWidth + " × " + originalImage.naturalHeight + " pixels";
-    setStatus("Photo prête — réglez les bandes puis lancez le traitement.", true);
+    setStatus("Photo prête — délimitez la zone puis lancez le traitement.", true);
+    selectionLayer.hidden = false;
+    selectionHelp.hidden = false;
+    requestAnimationFrame(updateImageBounds);
     updateProcessButton();
   };
 
   originalImage.onerror = () => {
     imageReady = false;
+    selectionLayer.hidden = true;
+    selectionHelp.hidden = true;
     updateProcessButton();
     setStatus("Impossible d’ouvrir cette photo. Essayez un autre fichier.", false);
   };
@@ -61,7 +80,123 @@ photoInput.addEventListener("change", () => {
 
 verticalToggle.addEventListener("click", () => {
   verticalEnabled = !verticalEnabled;
-  updateDirectionControls();
+  function clamp(value, minimum, maximum) {
+  return Math.min(maximum, Math.max(minimum, value));
+}
+
+function updateImageBounds() {
+  if (!imageReady || !originalImage.naturalWidth || !originalImage.naturalHeight) return;
+  const stageRect = originalStage.getBoundingClientRect();
+  const imageRect = originalImage.getBoundingClientRect();
+  const naturalRatio = originalImage.naturalWidth / originalImage.naturalHeight;
+  const elementRatio = imageRect.width / imageRect.height;
+  let width = imageRect.width;
+  let height = imageRect.height;
+  let left = imageRect.left - stageRect.left;
+  let top = imageRect.top - stageRect.top;
+
+  if (naturalRatio > elementRatio) {
+    height = width / naturalRatio;
+    top += (imageRect.height - height) / 2;
+  } else {
+    width = height * naturalRatio;
+    left += (imageRect.width - width) / 2;
+  }
+
+  imageBounds = { left, top, width, height };
+  selectionLayer.style.left = left + "px";
+  selectionLayer.style.top = top + "px";
+  selectionLayer.style.width = width + "px";
+  selectionLayer.style.height = height + "px";
+  renderSelection();
+}
+
+function renderSelection() {
+  selectionBox.style.left = selection.x * 100 + "%";
+  selectionBox.style.top = selection.y * 100 + "%";
+  selectionBox.style.width = selection.width * 100 + "%";
+  selectionBox.style.height = selection.height * 100 + "%";
+  effectSide.style.left = axisPosition * 100 + "%";
+  effectAxis.style.left = axisPosition * 100 + "%";
+  effectAxis.setAttribute("aria-valuenow", String(Math.round(axisPosition * 100)));
+}
+
+function pointerPosition(event) {
+  const rect = originalStage.getBoundingClientRect();
+  return {
+    x: (event.clientX - rect.left - imageBounds.left) / imageBounds.width,
+    y: (event.clientY - rect.top - imageBounds.top) / imageBounds.height,
+  };
+}
+
+function beginDrag(event, mode) {
+  if (!imageReady || !imageBounds.width) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const point = pointerPosition(event);
+  dragState = {
+    mode,
+    startX: point.x,
+    startY: point.y,
+    selection: { ...selection },
+    axisPosition,
+  };
+}
+
+selectionBox.addEventListener("pointerdown", (event) => beginDrag(event, "move"));
+effectAxis.addEventListener("pointerdown", (event) => beginDrag(event, "axis"));
+selectionHandles.forEach((handle) => {
+  handle.addEventListener("pointerdown", (event) => beginDrag(event, handle.dataset.handle));
+});
+
+effectAxis.addEventListener("keydown", (event) => {
+  if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+  event.preventDefault();
+  axisPosition = clamp(axisPosition + (event.key === "ArrowLeft" ? -0.02 : 0.02), 0, 0.9);
+  renderSelection();
+  clearResult();
+  setStatus("Axe déplacé — appuyez sur « Traiter la photo ».", true);
+});
+
+window.addEventListener("pointermove", (event) => {
+  if (!dragState) return;
+  event.preventDefault();
+  const point = pointerPosition(event);
+  const dx = point.x - dragState.startX;
+  const dy = point.y - dragState.startY;
+  const start = dragState.selection;
+  const minimumSize = 0.1;
+
+  if (dragState.mode === "axis") {
+    axisPosition = clamp(dragState.axisPosition + dx / start.width, 0, 0.9);
+  } else if (dragState.mode === "move") {
+    selection = {
+      ...start,
+      x: clamp(start.x + dx, 0, 1 - start.width),
+      y: clamp(start.y + dy, 0, 1 - start.height),
+    };
+  } else {
+    let left = start.x;
+    let top = start.y;
+    let right = start.x + start.width;
+    let bottom = start.y + start.height;
+    if (dragState.mode.includes("w")) left = clamp(start.x + dx, 0, right - minimumSize);
+    if (dragState.mode.includes("e")) right = clamp(start.x + start.width + dx, left + minimumSize, 1);
+    if (dragState.mode.includes("n")) top = clamp(start.y + dy, 0, bottom - minimumSize);
+    if (dragState.mode.includes("s")) bottom = clamp(start.y + start.height + dy, top + minimumSize, 1);
+    selection = { x: left, y: top, width: right - left, height: bottom - top };
+  }
+
+  renderSelection();
+  clearResult();
+  setStatus("Zone modifiée — appuyez sur « Traiter la photo ».", true);
+}, { passive: false });
+
+window.addEventListener("pointerup", () => { dragState = null; });
+window.addEventListener("pointercancel", () => { dragState = null; });
+window.addEventListener("resize", updateImageBounds);
+
+updateDirectionControls();
   settingsChanged();
 });
 
@@ -90,23 +225,51 @@ processButton.addEventListener("click", () => {
   requestAnimationFrame(() => {
     const width = originalImage.naturalWidth;
     const height = originalImage.naturalHeight;
-    const verticalBandCount = Math.max(2, Math.round(100 / Number(verticalSlider.value)));
-    const horizontalBandCount = Math.max(2, Math.round(100 / Number(horizontalSlider.value)));
-    let currentSource = originalImage;
+    const selectionLeft = Math.round(selection.x * width);
+    const selectionTop = Math.round(selection.y * height);
+    const selectionRight = Math.round((selection.x + selection.width) * width);
+    const selectionBottom = Math.round((selection.y + selection.height) * height);
+    const effectLeft = Math.round(selectionLeft + axisPosition * (selectionRight - selectionLeft));
+    const effectWidth = Math.max(2, selectionRight - effectLeft);
+    const effectHeight = Math.max(2, selectionBottom - selectionTop);
+    const verticalBandCount = Math.max(2, Math.min(effectWidth, Math.round(100 / Number(verticalSlider.value))));
+    const horizontalBandCount = Math.max(2, Math.min(effectHeight, Math.round(100 / Number(horizontalSlider.value))));
+    const cropCanvas = document.createElement("canvas");
+    cropCanvas.width = effectWidth;
+    cropCanvas.height = effectHeight;
+    cropCanvas.getContext("2d").drawImage(
+      originalImage,
+      effectLeft,
+      selectionTop,
+      effectWidth,
+      effectHeight,
+      0,
+      0,
+      effectWidth,
+      effectHeight,
+    );
+    let currentSource = cropCanvas;
 
     if (verticalEnabled) {
       const verticalCanvas = document.createElement("canvas");
-      reverseVerticalBands(currentSource, verticalCanvas, width, height, verticalBandCount);
+      reverseVerticalBands(currentSource, verticalCanvas, effectWidth, effectHeight, verticalBandCount);
       currentSource = verticalCanvas;
     }
 
+    const processedCanvas = document.createElement("canvas");
     if (horizontalEnabled) {
-      reverseHorizontalBands(currentSource, resultCanvas, width, height, horizontalBandCount);
+      reverseHorizontalBands(currentSource, processedCanvas, effectWidth, effectHeight, horizontalBandCount);
     } else {
-      resultCanvas.width = width;
-      resultCanvas.height = height;
-      resultCanvas.getContext("2d").drawImage(currentSource, 0, 0, width, height);
+      processedCanvas.width = effectWidth;
+      processedCanvas.height = effectHeight;
+      processedCanvas.getContext("2d").drawImage(currentSource, 0, 0, effectWidth, effectHeight);
     }
+
+    resultCanvas.width = width;
+    resultCanvas.height = height;
+    const resultContext = resultCanvas.getContext("2d");
+    resultContext.drawImage(originalImage, 0, 0, width, height);
+    resultContext.drawImage(processedCanvas, effectLeft, selectionTop, effectWidth, effectHeight);
 
     hasResult = true;
     resultStage.classList.remove("empty");
@@ -119,7 +282,7 @@ processButton.addEventListener("click", () => {
       : verticalEnabled
         ? "verticales"
         : "horizontales";
-    setStatus("Terminé — bandes " + directions + " inversées.", true);
+    setStatus("Terminé — bandes " + directions + " inversées dans la zone choisie.", true);
     resultStage.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 });
