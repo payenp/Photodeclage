@@ -564,7 +564,7 @@ h2 {
   width: 4px;
   margin-left: -2px;
   border-radius: 999px;
-  background: var(--accent);
+  background: #d83a32;
   box-shadow: 0 0 0 2px #fff, 0 2px 8px rgba(24, 33, 30, 0.35);
   cursor: ew-resize;
   touch-action: none;
@@ -578,7 +578,7 @@ h2 {
   height: 18px;
   border: 2px solid #fff;
   border-radius: 50%;
-  background: var(--accent);
+  background: #d83a32;
   box-shadow: 0 1px 5px rgba(24, 33, 30, 0.3);
   content: "";
   transform: translateX(-50%);
@@ -594,7 +594,7 @@ h2 {
   padding: 4px 6px;
   border-radius: 4px;
   color: #fff;
-  background: var(--accent-dark);
+  background: #9e241e;
   font-size: 0.66rem;
   font-weight: 700;
   line-height: 1;
@@ -604,7 +604,61 @@ h2 {
 }
 
 .effect-axis:focus-visible {
-  outline: 3px solid rgba(230, 90, 58, 0.45);
+  outline: 3px solid rgba(216, 58, 50, 0.45);
+  outline-offset: 5px;
+}
+
+.start-axis {
+  position: absolute;
+  z-index: 4;
+  top: -7px;
+  bottom: -7px;
+  width: 4px;
+  margin-left: -2px;
+  border-radius: 999px;
+  background: #2f9e44;
+  box-shadow: 0 0 0 2px #fff, 0 2px 8px rgba(24, 33, 30, 0.35);
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.start-axis[hidden] { display: none; }
+
+.start-axis::before,
+.start-axis::after {
+  position: absolute;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #2f9e44;
+  box-shadow: 0 1px 5px rgba(24, 33, 30, 0.3);
+  content: "";
+  transform: translateX(-50%);
+}
+
+.start-axis::before { top: -7px; }
+.start-axis::after { bottom: -7px; }
+
+.start-axis span {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  color: #fff;
+  background: #237635;
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.start-axis:focus-visible {
+  outline: 3px solid rgba(47, 158, 68, 0.42);
   outline-offset: 5px;
 }
 
@@ -708,7 +762,7 @@ h2 {
   }
 
   .selection-label { top: 6px; left: 6px; font-size: 0.64rem; }
-  .effect-axis span { display: none; }
+  .effect-axis span, .start-axis span { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
