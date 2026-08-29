@@ -93,14 +93,14 @@
             <input id="horizontal-height" class="band-slider" type="range" min="2" max="25" step="1" value="6" disabled aria-label="Hauteur des bandes horizontales" />
           </div>
 
-          <div id="symmetry-setting" class="symmetry-setting">
-            <button id="symmetry-button" class="symmetry-button" type="button" aria-pressed="false">
+          <div id="symmetry-setting" class="symmetry-setting active">
+            <button id="symmetry-button" class="symmetry-button" type="button" aria-pressed="true">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 3v18M9 6 4 12l5 6V6Zm6 0 5 6-5 6V6Z" />
               </svg>
-              <span id="symmetry-label">Symétrie</span>
+              <span id="symmetry-label">Symétrie activée</span>
             </button>
-            <span>Reproduit en miroir, à gauche de l’axe vertical, la partie traitée située à droite.</span>
+            <span>La ligne rouge est l’axe du miroir. La ligne verte règle le départ gauche de la nouvelle composition.</span>
           </div>
         </div>
 
@@ -128,9 +128,12 @@
                 <div id="selection-box" class="selection-box">
                   <span class="selection-label">Zone de l’effet</span>
                   <div id="effect-side" class="effect-side" aria-hidden="true"></div>
-                  <div id="mirror-side" class="mirror-side" aria-hidden="true" hidden></div>
-                  <div id="effect-axis" class="effect-axis" role="slider" tabindex="0" aria-label="Début de l’effet dans la zone" aria-valuemin="0" aria-valuemax="90" aria-valuenow="25">
-                    <span>Début</span>
+                  <div id="mirror-side" class="mirror-side" aria-hidden="true"></div>
+                  <div id="effect-axis" class="effect-axis" role="slider" tabindex="0" aria-label="Axe central du miroir" aria-valuemin="8" aria-valuemax="95" aria-valuenow="50">
+                    <span>Axe miroir</span>
+                  </div>
+                  <div id="start-axis" class="start-axis" role="slider" tabindex="0" aria-label="Départ gauche de la composition symétrique" aria-valuemin="0" aria-valuemax="45" aria-valuenow="10">
+                    <span>Départ image</span>
                   </div>
                   <button class="selection-handle nw" data-handle="nw" type="button" aria-label="Redimensionner la zone en haut à gauche"></button>
                   <button class="selection-handle ne" data-handle="ne" type="button" aria-label="Redimensionner la zone en haut à droite"></button>
@@ -140,7 +143,7 @@
               </div>
             </div>
             <p id="selection-help" class="selection-help" hidden>
-              Déplacez ou redimensionnez le cadre. Faites glisser la ligne orange pour choisir où l’effet commence.
+              Ligne rouge : axe du miroir. Ligne verte : départ gauche de l’image composée. Déplacez-les au doigt.
             </p>
           </article>
 
