@@ -35,8 +35,8 @@
             <p class="step">01 — Choisir</p>
             <h2 id="workspace-title">Transformez votre photo</h2>
             <p class="explanation">
-              La photo sera découpée en bandes verticales. La bande située tout
-              à droite passera à gauche, et ainsi de suite.
+              Activez la découpe verticale, horizontale, ou les deux. Les bandes
+              sont inversées d’un bord à l’autre selon les directions choisies.
             </p>
           </div>
 
@@ -55,6 +55,42 @@
                 <path d="M5 12h14m-5-5 5 5-5 5" />
               </svg>
             </button>
+          </div>
+        </div>
+
+        <div class="direction-settings" aria-label="Sens de découpe">
+          <div class="direction-card active" id="vertical-card">
+            <div class="direction-title">
+              <div>
+                <span class="direction-name">Vertical</span>
+                <span class="direction-help">Décalage de droite à gauche</span>
+              </div>
+              <button id="vertical-toggle" class="direction-toggle active" type="button" role="switch" aria-checked="true" aria-label="Activer la découpe verticale">
+                <span></span>
+              </button>
+            </div>
+            <div class="slider-row">
+              <label for="vertical-width">Largeur des bandes</label>
+              <strong id="vertical-value">6 %</strong>
+            </div>
+            <input id="vertical-width" class="band-slider" type="range" min="2" max="25" step="1" value="6" aria-label="Largeur des bandes verticales" />
+          </div>
+
+          <div class="direction-card" id="horizontal-card">
+            <div class="direction-title">
+              <div>
+                <span class="direction-name">Horizontal</span>
+                <span class="direction-help">Décalage du bas vers le haut</span>
+              </div>
+              <button id="horizontal-toggle" class="direction-toggle" type="button" role="switch" aria-checked="false" aria-label="Activer la découpe horizontale">
+                <span></span>
+              </button>
+            </div>
+            <div class="slider-row">
+              <label for="horizontal-height">Hauteur des bandes</label>
+              <strong id="horizontal-value">6 %</strong>
+            </div>
+            <input id="horizontal-height" class="band-slider" type="range" min="2" max="25" step="1" value="6" disabled aria-label="Hauteur des bandes horizontales" />
           </div>
         </div>
 
@@ -93,7 +129,7 @@
                 </div>
                 <p>Appuyez sur « Traiter la photo »</p>
               </div>
-              <canvas id="result-canvas" aria-label="Photo découpée en bandes verticales inversées"></canvas>
+              <canvas id="result-canvas" aria-label="Photo découpée en bandes inversées"></canvas>
             </div>
           </article>
         </div>
