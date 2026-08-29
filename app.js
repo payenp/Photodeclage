@@ -26,15 +26,17 @@ const symmetryButton = document.querySelector("#symmetry-button");
 const symmetrySetting = document.querySelector("#symmetry-setting");
 const symmetryLabel = document.querySelector("#symmetry-label");
 const mirrorSide = document.querySelector("#mirror-side");
+const startAxis = document.querySelector("#start-axis");
 
 let sourceUrl = "";
 let imageReady = false;
 let hasResult = false;
 let verticalEnabled = true;
 let horizontalEnabled = false;
-let symmetryEnabled = false;
+let symmetryEnabled = true;
 let selection = { x: 0.1, y: 0.1, width: 0.8, height: 0.8 };
-let axisPosition = 0.25;
+let axisPosition = 0.5;
+let greenPosition = 0.1;
 let imageBounds = { left: 0, top: 0, width: 0, height: 0 };
 let dragState = null;
 
@@ -53,7 +55,8 @@ photoInput.addEventListener("change", () => {
   hasResult = false;
   downloadMeta.textContent = "PNG — même définition que l’original";
   selection = { x: 0.1, y: 0.1, width: 0.8, height: 0.8 };
-  axisPosition = 0.25;
+  axisPosition = 0.5;
+  greenPosition = 0.1;
   selectionLayer.hidden = true;
   selectionHelp.hidden = true;
   updateProcessButton();
@@ -89,6 +92,12 @@ verticalToggle.addEventListener("click", () => {
   return Math.min(maximum, Math.max(minimum, value));
 }
 
+function constrainGreenPosition(axis, green) {
+  const minimum = Math.max(0, axis * 2 - 1);
+  const maximum = Math.max(minimum, axis - 0.05);
+  return clamp(green, minimum, maximum);
+}
+
 function updateImageBounds() {
   if (!imageReady || !originalImage.naturalWidth || !originalImage.naturalHeight) return;
   const stageRect = originalStage.getBoundingClientRect();
@@ -122,10 +131,17 @@ function renderSelection() {
   selectionBox.style.width = selection.width * 100 + "%";
   selectionBox.style.height = selection.height * 100 + "%";
   effectSide.style.left = axisPosition * 100 + "%";
+  effectSide.style.right = symmetryEnabled
+    ? Math.max(0, 1 - (axisPosition * 2 - greenPosition)) * 100 + "%"
+    : "0";
   effectAxis.style.left = axisPosition * 100 + "%";
-  mirrorSide.style.left = Math.max(0, axisPosition * 2 - 1) * 100 + "%";
+  mirrorSide.style.left = greenPosition * 100 + "%";
   mirrorSide.style.right = (1 - axisPosition) * 100 + "%";
+  startAxis.style.left = greenPosition * 100 + "%";
   effectAxis.setAttribute("aria-valuenow", String(Math.round(axisPosition * 100)));
+  startAxis.setAttribute("aria-valuemin", String(Math.round(Math.max(0, axisPosition * 2 - 1) * 100)));
+  startAxis.setAttribute("aria-valuemax", String(Math.round((axisPosition - 0.05) * 100)));
+  startAxis.setAttribute("aria-valuenow", String(Math.round(greenPosition * 100)));
 }
 
 function pointerPosition(event) {
@@ -147,6 +163,7 @@ function beginDrag(event, mode) {
     startY: point.y,
     selection: { ...selection },
     axisPosition,
+    greenPosition,
   };
 }
 
@@ -156,6 +173,7 @@ symmetryButton.addEventListener("click", () => {
   symmetrySetting.classList.toggle("active", symmetryEnabled);
   symmetryLabel.textContent = symmetryEnabled ? "Symétrie activée" : "Symétrie";
   mirrorSide.hidden = !symmetryEnabled;
+  startAxis.hidden = !symmetryEnabled;
   renderSelection();
   settingsChanged();
 });
@@ -169,10 +187,24 @@ selectionHandles.forEach((handle) => {
 effectAxis.addEventListener("keydown", (event) => {
   if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
   event.preventDefault();
-  axisPosition = clamp(axisPosition + (event.key === "ArrowLeft" ? -0.02 : 0.02), 0, 0.9);
+  axisPosition = clamp(axisPosition + (event.key === "ArrowLeft" ? -0.02 : 0.02), 0.08, 0.95);
+  greenPosition = constrainGreenPosition(axisPosition, greenPosition);
   renderSelection();
   clearResult();
-  setStatus("Axe déplacé — appuyez sur « Traiter la photo ».", true);
+  setStatus("Axe rouge déplacé — appuyez sur « Traiter la photo ».", true);
+});
+
+startAxis.addEventListener("pointerdown", (event) => beginDrag(event, "green"));
+startAxis.addEventListener("keydown", (event) => {
+  if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+  event.preventDefault();
+  greenPosition = constrainGreenPosition(
+    axisPosition,
+    greenPosition + (event.key === "ArrowLeft" ? -0.02 : 0.02),
+  );
+  renderSelection();
+  clearResult();
+  setStatus("Départ vert déplacé — appuyez sur « Traiter la photo ».", true);
 });
 
 window.addEventListener("pointermove", (event) => {
@@ -185,7 +217,13 @@ window.addEventListener("pointermove", (event) => {
   const minimumSize = 0.1;
 
   if (dragState.mode === "axis") {
-    axisPosition = clamp(dragState.axisPosition + dx / start.width, 0, 0.9);
+    axisPosition = clamp(dragState.axisPosition + dx / start.width, 0.08, 0.95);
+    greenPosition = constrainGreenPosition(axisPosition, greenPosition);
+  } else if (dragState.mode === "green") {
+    greenPosition = constrainGreenPosition(
+      dragState.axisPosition,
+      dragState.greenPosition + dx / start.width,
+    );
   } else if (dragState.mode === "move") {
     selection = {
       ...start,
@@ -247,7 +285,10 @@ processButton.addEventListener("click", () => {
     const selectionRight = Math.round((selection.x + selection.width) * width);
     const selectionBottom = Math.round((selection.y + selection.height) * height);
     const effectLeft = Math.round(selectionLeft + axisPosition * (selectionRight - selectionLeft));
-    const effectWidth = Math.max(2, selectionRight - effectLeft);
+    const greenLeft = Math.round(selectionLeft + greenPosition * (selectionRight - selectionLeft));
+    const effectWidth = symmetryEnabled
+      ? Math.max(2, effectLeft - greenLeft)
+      : Math.max(2, selectionRight - effectLeft);
     const effectHeight = Math.max(2, selectionBottom - selectionTop);
     const verticalBandCount = Math.max(2, Math.min(effectWidth, Math.round(100 / Number(verticalSlider.value))));
     const horizontalBandCount = Math.max(2, Math.min(effectHeight, Math.round(100 / Number(horizontalSlider.value))));
@@ -291,7 +332,7 @@ processButton.addEventListener("click", () => {
     if (symmetryEnabled) {
       resultContext.save();
       resultContext.beginPath();
-      resultContext.rect(selectionLeft, selectionTop, Math.max(0, effectLeft - selectionLeft), effectHeight);
+      resultContext.rect(greenLeft, selectionTop, Math.max(0, effectLeft - greenLeft), effectHeight);
       resultContext.clip();
       resultContext.translate(effectLeft * 2, 0);
       resultContext.scale(-1, 1);
