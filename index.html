@@ -114,7 +114,23 @@
                 <p>Votre photo apparaîtra ici</p>
               </div>
               <img id="original-image" alt="Photo d’origine choisie" />
+              <div id="selection-layer" class="selection-layer" hidden>
+                <div id="selection-box" class="selection-box">
+                  <span class="selection-label">Zone de l’effet</span>
+                  <div id="effect-side" class="effect-side" aria-hidden="true"></div>
+                  <div id="effect-axis" class="effect-axis" role="slider" tabindex="0" aria-label="Début de l’effet dans la zone" aria-valuemin="0" aria-valuemax="90" aria-valuenow="25">
+                    <span>Début</span>
+                  </div>
+                  <button class="selection-handle nw" data-handle="nw" type="button" aria-label="Redimensionner la zone en haut à gauche"></button>
+                  <button class="selection-handle ne" data-handle="ne" type="button" aria-label="Redimensionner la zone en haut à droite"></button>
+                  <button class="selection-handle sw" data-handle="sw" type="button" aria-label="Redimensionner la zone en bas à gauche"></button>
+                  <button class="selection-handle se" data-handle="se" type="button" aria-label="Redimensionner la zone en bas à droite"></button>
+                </div>
+              </div>
             </div>
+            <p id="selection-help" class="selection-help" hidden>
+              Déplacez ou redimensionnez le cadre. Faites glisser la ligne orange pour choisir où l’effet commence.
+            </p>
           </article>
 
           <article class="preview-card result-card">
