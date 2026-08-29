@@ -231,7 +231,8 @@ h2 {
 .band-slider:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .file-button,
-#process-button {
+#process-button,
+.download-button {
   display: inline-flex;
   min-height: 50px;
   align-items: center;
@@ -274,7 +275,8 @@ h2 {
 }
 
 .file-button svg,
-#process-button svg {
+#process-button svg,
+.download-button svg {
   width: 20px;
   fill: none;
   stroke: currentColor;
@@ -413,6 +415,48 @@ h2 {
 .slice-symbol span:nth-child(4) { transform: translateY(-8px); }
 .slice-symbol span:nth-child(5) { transform: translateY(2px); }
 
+.download-panel {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  padding-top: 16px;
+}
+
+.download-button {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 16px;
+  border: 1px solid var(--ink);
+  border-radius: 7px;
+  color: var(--card);
+  background: var(--ink);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+
+.download-button:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+
+.download-button:focus-visible {
+  outline: 3px solid rgba(230, 90, 58, 0.3);
+  outline-offset: 3px;
+}
+
+.download-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+#download-meta {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
 @media (max-width: 900px) {
   .intro {
     grid-template-columns: 1fr;
@@ -475,7 +519,8 @@ h2 {
 
   .actions,
   .file-button,
-  #process-button {
+  #process-button,
+  .download-button {
     width: 100%;
   }
 
